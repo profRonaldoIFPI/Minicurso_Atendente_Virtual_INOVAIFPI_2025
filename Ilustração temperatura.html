@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Semântico</title>
+  <style>
+    body {
+      background-color: #fafafa;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 0;
+    }
+
+    canvas {
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .controls input[type="range"] {
+      width: 250px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plano Cartesiano Semântico</h1>
+  <div class="controls">
+    <label for="temperatura">Temperatura:</label>
+    <input type="range" id="temperatura" min="0" max="100" value="30">
+    <span id="valorTemp">30</span>
+  </div>
+
+  <canvas id="plano" width="700" height="450"></canvas>
+
+  <script>
+    const canvas = document.getElementById("plano");
+    const ctx = canvas.getContext("2d");
+    const slider = document.getElementById("temperatura");
+    const valorTemp = document.getElementById("valorTemp");
+
+    // Palavras com embeddings simulados (0 a 1)
+    const palavras = [
+      { texto: "Gato", embed: [0.2, 0.7], cor: "#ff6f61" },
+      { texto: "Cachorro", embed: [0.25, 0.68], cor: "#ff8c42" },
+      { texto: "Leão", embed: [0.35, 0.55], cor: "#ffb347" },
+      { texto: "Computador", embed: [0.8, 0.4], cor: "#42a5f5" },
+      { texto: "Teclado", embed: [0.78, 0.42], cor: "#64b5f6" },
+      { texto: "Montanha", embed: [0.5, 0.85], cor: "#66bb6a" },
+      { texto: "Rio", embed: [0.55, 0.8], cor: "#81c784" },
+      { texto: "Amor", embed: [0.9, 0.2], cor: "#ba68c8" },
+      { texto: "Tristeza", embed: [0.88, 0.25], cor: "#9575cd" },
+      { texto: "Felicidade", embed: [0.92, 0.18], cor: "#ab47bc" }
+    ];
+
+    function map(value, inMin, inMax, outMin, outMax) {
+      return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+    }
+
+    function desenharPlano() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const margem = 50;
+      const larguraUtil = canvas.width - margem * 2;
+      const alturaUtil = canvas.height - margem * 2;
+      const temperatura = parseInt(slider.value);
+
+      // Eixos X e Y (apenas 1º quadrante)
+      ctx.strokeStyle = "#888";
+      ctx.beginPath();
+      ctx.moveTo(margem, canvas.height - margem);
+      ctx.lineTo(canvas.width - margem + 20, canvas.height - margem); // eixo X
+      ctx.moveTo(margem, canvas.height - margem);
+      ctx.lineTo(margem, margem - 20); // eixo Y
+      ctx.stroke();
+
+      // Rótulos dos eixos
+      ctx.fillStyle = "#555";
+      ctx.font = "14px Arial";
+      ctx.fillText("0", margem - 15, canvas.height - margem + 15);
+      ctx.fillText("+X", canvas.width - margem + 10, canvas.height - margem + 15);
+      ctx.fillText("+Y", margem - 20, margem - 10);
+
+      // Desenhar palavras no 1º quadrante
+      palavras.forEach(p => {
+        const x = map(p.embed[0], 0, 1, margem, margem + larguraUtil);
+        const y = map(p.embed[1], 0, 1, canvas.height - margem, margem);
+
+        // círculo
+        ctx.beginPath();
+        ctx.arc(x, y, temperatura / 2, 0, Math.PI * 2);
+        ctx.fillStyle = p.cor + "33";
+        ctx.fill();
+        ctx.strokeStyle = p.cor;
+        ctx.stroke();
+
+        // texto
+        ctx.fillStyle = "#222";
+        ctx.font = "14px Arial";
+        ctx.fillText(p.texto, x - ctx.measureText(p.texto).width / 2, y - 12);
+
+        // valores do embedding
+        ctx.font = "12px monospace";
+        ctx.fillStyle = "#555";
+        ctx.fillText(`(${p.embed[0].toFixed(2)}, ${p.embed[1].toFixed(2)})`, x - 30, y + 20);
+      });
+    }
+
+    slider.addEventListener("input", () => {
+      valorTemp.textContent = slider.value;
+      desenharPlano();
+    });
+
+    desenharPlano();
+  </script>
+</body>
+</html>
